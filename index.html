@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Promediometro</title>
   <style>
     :root {
@@ -34,6 +34,7 @@
       margin: 0;
       min-height: 100vh;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-text-size-adjust: 100%;
       background:
         radial-gradient(circle at top left, rgba(56, 184, 166, 0.16), transparent 34rem),
         radial-gradient(circle at 84% 12%, rgba(242, 184, 75, 0.13), transparent 27rem),
@@ -186,12 +187,14 @@
     input,
     select {
       width: 100%;
+      min-height: 44px;
       border: 1px solid rgba(185, 201, 218, 0.24);
       border-radius: 8px;
       background: rgba(7, 11, 16, 0.78);
       color: var(--text);
       padding: 10px 11px;
       font: inherit;
+      font-size: 16px;
       outline: none;
     }
 
@@ -235,6 +238,7 @@
     button {
       border: 0;
       border-radius: 8px;
+      min-height: 44px;
       padding: 10px 13px;
       background: var(--accent);
       color: #05110f;
@@ -260,6 +264,7 @@
     .check input {
       width: 18px;
       height: 18px;
+      min-height: 18px;
       accent-color: var(--accent);
     }
 
@@ -366,6 +371,10 @@
         grid-template-columns: 1fr;
       }
 
+      .scale {
+        width: 100%;
+      }
+
       .result-panel {
         position: static;
       }
@@ -378,19 +387,121 @@
     }
 
     @media (max-width: 560px) {
-      main {
-        width: min(100% - 20px, 1200px);
-        padding-top: 18px;
+      body {
+        background:
+          radial-gradient(circle at top left, rgba(56, 184, 166, 0.12), transparent 22rem),
+          linear-gradient(135deg, var(--bg), #111823 58%, #090c11);
       }
 
-      .input-row,
-      .score {
+      main {
+        width: min(100% - 16px, 1200px);
+        padding: 16px 0 28px;
+      }
+
+      header {
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      h1 {
+        font-size: 2.15rem;
+        line-height: 1.02;
+      }
+
+      .subtitle {
+        font-size: 0.95rem;
+      }
+
+      .tabs {
+        width: 100%;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: rgba(10, 14, 20, 0.88);
+        backdrop-filter: blur(14px);
+      }
+
+      .tab {
+        flex: 1;
+        text-align: center;
+      }
+
+      .form,
+      .result-panel {
+        padding: 14px;
+      }
+
+      section,
+      aside {
+        border-radius: 8px;
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3);
+      }
+
+      .section-title {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .weight {
+        white-space: normal;
+      }
+
+      .input-row {
         grid-template-columns: 1fr;
+        gap: 6px;
       }
 
       .mini-grid,
       .mini-grid.five,
       .task-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .score {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .metric {
+        padding: 11px;
+      }
+
+      .metric span {
+        font-size: 0.78rem;
+      }
+
+      .metric strong {
+        font-size: 1.45rem;
+      }
+
+      .tools {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .tools .check {
+        grid-column: 1 / -1;
+        align-items: flex-start;
+      }
+
+      .status {
+        padding: 12px;
+        font-size: 0.94rem;
+      }
+
+      .detail div {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 3px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .mini-grid,
+      .mini-grid.five,
+      .task-list,
+      .score,
+      .tools {
         grid-template-columns: 1fr;
       }
     }
