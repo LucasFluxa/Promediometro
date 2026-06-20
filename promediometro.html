@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Promediometro</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0c1015;
+      --bg-2: #101720;
+      --panel: rgba(20, 28, 38, 0.92);
+      --panel-2: rgba(16, 23, 32, 0.92);
+      --text: #edf4fb;
+      --muted: #96a6b9;
+      --line: rgba(165, 184, 205, 0.18);
+      --accent: #38b8a6;
+      --accent-2: #f2b84b;
+      --accent-dark: #8fe9dc;
+      --ok: #4bd58a;
+      --warn: #f2b84b;
+      --bad: #ff746f;
+      --soft-ok: rgba(75, 213, 138, 0.12);
+      --soft-warn: rgba(242, 184, 75, 0.14);
+      --soft-bad: rgba(255, 116, 111, 0.12);
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(56, 184, 166, 0.16), transparent 34rem),
+        radial-gradient(circle at 84% 12%, rgba(242, 184, 75, 0.13), transparent 27rem),
+        linear-gradient(135deg, var(--bg), #111823 55%, #090c11);
+      color: var(--text);
+    }
+
+    main {
+      width: min(1200px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 30px 0 44px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 4vw, 3.35rem);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.5;
+    }
+
+    .scale {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+      border-radius: 8px;
+      padding: 13px 15px;
+      min-width: 200px;
+      box-shadow: var(--shadow);
+    }
+
+    .scale strong {
+      display: block;
+      color: var(--accent-dark);
+      margin-bottom: 2px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 18px;
+      padding: 5px;
+      width: fit-content;
+      max-width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(10, 14, 20, 0.58);
+      overflow-x: auto;
+    }
+
+    .tab {
+      border: 0;
+      border-radius: 7px;
+      padding: 10px 14px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: #04100e;
+    }
+
+    .course {
+      display: none;
+    }
+
+    .course.active {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    section,
+    aside {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .form,
+    .result-panel {
+      padding: 18px;
+    }
+
+    .result-panel {
+      position: sticky;
+      top: 16px;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin: 0 0 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .weight {
+      color: var(--muted);
+      font-size: 0.88rem;
+      white-space: nowrap;
+    }
+
+    .rows {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: minmax(120px, 1fr) minmax(120px, 190px);
+      gap: 12px;
+      align-items: center;
+    }
+
+    label {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    input,
+    select {
+      width: 100%;
+      border: 1px solid rgba(185, 201, 218, 0.24);
+      border-radius: 8px;
+      background: rgba(7, 11, 16, 0.78);
+      color: var(--text);
+      padding: 10px 11px;
+      font: inherit;
+      outline: none;
+    }
+
+    input::placeholder {
+      color: #69798c;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(56, 184, 166, 0.18);
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .mini-grid.five {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .mini-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .mini-field label {
+      font-size: 0.82rem;
+    }
+
+    .tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 13px;
+      background: var(--accent);
+      color: #05110f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: rgba(233, 238, 243, 0.12);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .check {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .check input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .task-list {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .score {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 13px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .metric strong {
+      font-size: 1.85rem;
+      line-height: 1;
+    }
+
+    .status {
+      border-radius: 8px;
+      padding: 14px;
+      margin: 12px 0;
+      line-height: 1.45;
+      border: 1px solid transparent;
+    }
+
+    .status.ok {
+      color: var(--ok);
+      background: var(--soft-ok);
+      border-color: rgba(75, 213, 138, 0.32);
+    }
+
+    .status.warn {
+      color: var(--warn);
+      background: var(--soft-warn);
+      border-color: rgba(242, 184, 75, 0.34);
+    }
+
+    .status.bad {
+      color: var(--bad);
+      background: var(--soft-bad);
+      border-color: rgba(255, 116, 111, 0.32);
+    }
+
+    .status.neutral {
+      color: #cad5e2;
+      background: rgba(202, 213, 226, 0.08);
+      border-color: var(--line);
+    }
+
+    .detail {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .detail div {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid rgba(237, 241, 245, 0.09);
+      padding-bottom: 7px;
+    }
+
+    .detail strong {
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+      margin: 10px 0 0;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 930px) {
+      header,
+      .course.active {
+        grid-template-columns: 1fr;
+      }
+
+      .result-panel {
+        position: static;
+      }
+
+      .mini-grid,
+      .mini-grid.five,
+      .task-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      main {
+        width: min(100% - 20px, 1200px);
+        padding-top: 18px;
+      }
+
+      .input-row,
+      .score {
+        grid-template-columns: 1fr;
+      }
+
+      .mini-grid,
+      .mini-grid.five,
+      .task-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Promediometro</h1>
+        <p class="subtitle">Ingresa tus notas en escala 0 a 100. La pagina calcula promedio, estado de aprobacion y escenarios de certamen global.</p>
+      </div>
+      <div class="scale">
+        <strong>Escala USM</strong>
+        <span>Aprobacion desde 55 puntos.</span>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="Ramos">
+      <button class="tab active" type="button" data-course="fis">FIS100</button>
+      <button class="tab" type="button" data-course="mat">MAT70</button>
+    </nav>
+
+    <div class="course active" id="fis-course">
+      <section class="form" aria-label="Formulario FIS100">
+        <div class="section-title">
+          <h2>FIS100 · Certamenes</h2>
+          <span class="weight">20% + 20% + 25%</span>
+        </div>
+        <div class="rows">
+          <div class="input-row"><label for="fis-ce1">Certamen 1</label><input id="fis-ce1" type="number" min="0" max="100" step="0.1" inputmode="decimal" placeholder="0 a 100"></div>
+          <div class="input-row"><label for="fis-ce2">Certamen 2</label><input id="fis-ce2" type="number" min="0" max="100" step="0.1" inputmode="decimal" placeholder="0 a 100"></div>
+          <div class="input-row"><label for="fis-ce3">Certamen 3</label><input id="fis-ce3" type="number" min="0" max="100" step="0.1" inputmode="decimal" placeholder="dejar vacio para estimar"></div>
+        </div>
+
+        <div class="section-title">
+          <h2>Controles</h2>
+          <span class="weight">PCo 20%</span>
+        </div>
+        <div class="mini-grid five">
+          <div class="mini-field"><label for="fis-co1">Co1</label><input id="fis-co1" type="number" min="0" max="100" step="0.1" inputmode="decimal"></div>
+          <div class="mini-field"><label for="fis-co2">Co2</label><input id="fis-co2" type="number" min="0" max="100" step="0.1" inputmode="decimal"></div>
+          <div class="mini-field"><label for="fis-co3">Co3</label><input id="fis-co3" type="number" min="0" max="100" step="0.1" inputmode="decimal"></div>
+          <div class="mini-field"><label for="fis-co4">Co4</label><input id="fis-co4" type="number" min="0" max="100" step="0.1" inputmode="decimal"></div>
+          <div class="mini-field"><label for="fis-co5">Co5</label><input id="fis-co5" type="number" min="0" max="100" step="0.1" inputmode="decimal"></div>
+        </div>
+        <p class="note">PCo usa los controles ingresados.</p>
+
+        <div class="section-title" style="margin-top: 18px;">
+          <h2>Actividades y tareas</h2>
+          <span class="weight">PCL 5% + PT 10%</span>
+        </div>
+        <div class="rows">
+          <div class="input-row"><label for="fis-pcl">Promedio pre-clase</label><input id="fis-pcl" type="number" min="0" max="100" step="0.1" inputmode="decimal" placeholder="PCL"></div>
+        </div>
+        <div class="task-list" id="fis-tasks"></div>
+        <div class="tools">
+          <button type="button" id="fis-add-task">Agregar tarea</button>
+          <button type="button" class="secondary" id="fis-remove-task">Quitar tarea</button>
+          <label class="check" for="fis-drop-two"><input id="fis-drop-two" type="checkbox" checked>Descartar las 2 menores</label>
+        </div>
+
+        <div class="section-title" style="margin-top: 18px;">
+          <h2>Alfa y global</h2>
+          <span class="weight">asistencia / CeG</span>
+        </div>
+        <div class="rows">
+          <div class="input-row">
+            <label for="fis-alpha">Factor Alfa</label>
+            <select id="fis-alpha">
+              <option value="1">1,0 · asistencia y participacion >= 80%</option>
+              <option value="0.5">0,5 · asistencia y participacion < 80%</option>
+            </select>
+          </div>
+          <div class="input-row"><label for="fis-ceg">Certamen global</label><input id="fis-ceg" type="number" min="0" max="100" step="0.1" inputmode="decimal" placeholder="opcional"></div>
+        </div>
+      </section>
+
+      <aside class="result-panel" aria-label="Resultados FIS100">
+        <div class="section-title">
+          <h2>Resultado FIS100</h2>
+          <span class="weight">automatico</span>
+        </div>
+        <div class="score">
+          <div class="metric"><span>Promedio semestral</span><strong id="fis-ps">--</strong></div>
+          <div class="metric"><span>Nota final</span><strong id="fis-nf">--</strong></div>
+        </div>
+        <div id="fis-status" class="status neutral">Ingresa tus notas para calcular el estado.</div>
+        <div id="fis-missing-ce3" class="status warn hidden"></div>
+        <div class="detail">
+          <div><span>Promedio controles (PCo)</span><strong id="fis-pco-out">--</strong></div>
+          <div><span>Promedio tareas (PT)</span><strong id="fis-pt-out">--</strong></div>
+          <div><span>Aporte sin Ce3</span><strong id="fis-base-out">--</strong></div>
+          <div><span>CeG minimo si vas a global</span><strong id="fis-ceg-needed">--</strong></div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="course" id="mat-course">
+      <section class="form" aria-label="Formulario MAT70">
+        <div class="section-title">
+          <h2>MAT70 · Certamenes</h2>
+          <span class="weight">25% cada uno</span>
+        </div>
+        <div class="rows">
+          <div class="input-row"><label for="mat-c1">Certamen 1</label><input id="mat-c1" type="number" min="0" max="100" step="0.1" inputmode="decimal" placeholder="0 a 100"></div>
+          <div class="input-row"><label for="mat-c2">Certamen 2</label><input id="mat-c2" type="number" min="0" max="100" step="0.1" inputmode="decimal" placeholder="0 a 100"></div>
+          <div class="input-row"><label for="mat-c3">Certamen 3</label><input id="mat-c3" type="number" min="0" max="100" step="0.1" inputmode="decimal" placeholder="dejar vacio para estimar"></div>
+        </div>
+
+        <div class="section-title">
+          <h2>Controles</h2>
+          <span class="weight">PQ 25% · 6 mejores</span>
+        </div>
+        <div class="mini-grid">
+          <div class="mini-field"><label for="mat-q1">Q1</label><input id="mat-q1" type="number" min="0" max="100" step="0.1" inputmode="decimal"></div>
+          <div class="mini-field"><label for="mat-q2">Q2</label><input id="mat-q2" type="number" min="0" max="100" step="0.1" inputmode="decimal"></div>
+          <div class="mini-field"><label for="mat-q3">Q3</label><input id="mat-q3" type="number" min="0" max="100" step="0.1" inputmode="decimal"></div>
+          <div class="mini-field"><label for="mat-q4">Q4</label><input id="mat-q4" type="number" min="0" max="100" step="0.1" inputmode="decimal"></div>
+          <div class="mini-field"><label for="mat-q5">Q5</label><input id="mat-q5" type="number" min="0" max="100" step="0.1" inputmode="decimal"></div>
+          <div class="mini-field"><label for="mat-q6">Q6</label><input id="mat-q6" type="number" min="0" max="100" step="0.1" inputmode="decimal"></div>
+          <div class="mini-field"><label for="mat-q7">Q7</label><input id="mat-q7" type="number" min="0" max="100" step="0.1" inputmode="decimal"></div>
+          <div class="mini-field"><label for="mat-q8">Q8</label><input id="mat-q8" type="number" min="0" max="100" step="0.1" inputmode="decimal"></div>
+        </div>
+        <p class="note">Por defecto se promedian las 6 mejores notas ingresadas. Si hay menos de 6, usa las disponibles.</p>
+
+        <div class="section-title" style="margin-top: 18px;">
+          <h2>Certamen global</h2>
+          <span class="weight">voluntario</span>
+        </div>
+        <div class="rows">
+          <div class="input-row"><label for="mat-cg">Global</label><input id="mat-cg" type="number" min="0" max="100" step="0.1" inputmode="decimal" placeholder="opcional"></div>
+        </div>
+      </section>
+
+      <aside class="result-panel" aria-label="Resultados MAT70">
+        <div class="section-title">
+          <h2>Resultado MAT70</h2>
+          <span class="weight">automatico</span>
+        </div>
+        <div class="score">
+          <div class="metric"><span>Presentacion semestral</span><strong id="mat-ps">--</strong></div>
+          <div class="metric"><span>Nota final</span><strong id="mat-nf">--</strong></div>
+        </div>
+        <div id="mat-status" class="status neutral">Ingresa tus notas para calcular el estado.</div>
+        <div id="mat-missing-c3" class="status warn hidden"></div>
+        <div class="detail">
+          <div><span>Promedio controles (PQ)</span><strong id="mat-pq-out">--</strong></div>
+          <div><span>Global reemplaza</span><strong id="mat-replace-out">--</strong></div>
+          <div><span>Global minimo para aprobar</span><strong id="mat-cg-needed">--</strong></div>
+          <div><span>Aporte sin C3</span><strong id="mat-base-out">--</strong></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => [...document.querySelectorAll(selector)];
+
+    function value(id) {
+      const raw = $("#" + id).value;
+      if (raw === "") return null;
+      const parsed = Number(raw);
+      return Number.isFinite(parsed) ? Math.min(100, Math.max(0, parsed)) : null;
+    }
+
+    function fmt(number) {
+      return number == null || !Number.isFinite(number) ? "--" : number.toFixed(2);
+    }
+
+    function describeRequired(number) {
+      if (number <= 0) return "ya cumplido";
+      if (number > 100) return "imposible con nota maxima 100";
+      return fmt(number);
+    }
+
+    function average(values) {
+      const valid = values.filter((n) => n != null);
+      if (!valid.length) return null;
+      return valid.reduce((sum, n) => sum + n, 0) / valid.length;
+    }
+
+    function bestAverage(values, count) {
+      const valid = values.filter((n) => n != null).sort((a, b) => b - a);
+      if (!valid.length) return null;
+      return average(valid.slice(0, Math.min(count, valid.length)));
+    }
+
+    function setStatus(id, kind, html) {
+      const box = $("#" + id);
+      box.className = "status " + kind;
+      box.innerHTML = html;
+    }
+
+    function taskAverage() {
+      const values = $$("#fis-tasks input").map((input) => {
+        if (input.value === "") return null;
+        const parsed = Number(input.value);
+        return Number.isFinite(parsed) ? Math.min(100, Math.max(0, parsed)) : null;
+      }).filter((n) => n != null);
+
+      if (!values.length) return null;
+      const shouldDrop = $("#fis-drop-two").checked && values.length > 2;
+      return average(shouldDrop ? [...values].sort((a, b) => a - b).slice(2) : values);
+    }
+
+    function addTaskInput(value = "") {
+      const index = $("#fis-tasks").children.length + 1;
+      const wrap = document.createElement("div");
+      wrap.className = "mini-field";
+      wrap.innerHTML = '<label for="fis-ta' + index + '">Tarea ' + index + '</label><input id="fis-ta' + index + '" type="number" min="0" max="100" step="0.1" inputmode="decimal" value="' + value + '">';
+      $("#fis-tasks").appendChild(wrap);
+      wrap.querySelector("input").addEventListener("input", calculateFis);
+    }
+
+    function calculateFis() {
+      const ce1 = value("fis-ce1");
+      const ce2 = value("fis-ce2");
+      const ce3 = value("fis-ce3");
+      const pcl = value("fis-pcl");
+      const alpha = value("fis-alpha") ?? 1;
+      const ceg = value("fis-ceg");
+      const pco = average(["fis-co1", "fis-co2", "fis-co3", "fis-co4", "fis-co5"].map(value));
+      const pt = taskAverage();
+      const baseReady = [ce1, ce2, pco, pcl, pt].every((n) => n != null);
+      const base = baseReady ? alpha * (0.2 * ce1 + 0.2 * ce2 + 0.2 * pco + 0.05 * pcl + 0.1 * pt) : null;
+      const ps = baseReady && ce3 != null ? base + alpha * 0.25 * ce3 : null;
+      const nf = ps != null && ps >= 50 && ps < 55 && ceg != null ? 0.6 * ps + 0.4 * ceg : ps;
+
+      $("#fis-ps").textContent = fmt(ps);
+      $("#fis-nf").textContent = fmt(nf);
+      $("#fis-pco-out").textContent = fmt(pco);
+      $("#fis-pt-out").textContent = fmt(pt);
+      $("#fis-base-out").textContent = fmt(base);
+      $("#fis-ceg-needed").textContent = ps != null && ps >= 50 && ps < 55 ? fmt((55 - 0.6 * ps) / 0.4) : "--";
+
+      if (ps == null) {
+        setStatus("fis-status", "neutral", "Faltan datos para calcular el promedio semestral completo.");
+      } else if (ps < 50) {
+        setStatus("fis-status", "bad", "<strong>Repruebas sin opcion a global.</strong><br>Con PS menor que 50, la nota final queda igual al PS.");
+      } else if (ps >= 55) {
+        setStatus("fis-status", "ok", "<strong>Apruebas directo.</strong><br>Con PS mayor o igual que 55, la nota final queda igual al PS.");
+      } else {
+        setStatus("fis-status", "warn", "<strong>Vas a global.</strong><br>Necesitas " + fmt((55 - 0.6 * ps) / 0.4) + " en el global para aprobar.");
+      }
+
+      const onlyCe3Missing = baseReady && ce3 == null;
+      $("#fis-missing-ce3").classList.toggle("hidden", !onlyCe3Missing);
+      if (onlyCe3Missing) {
+        $("#fis-missing-ce3").innerHTML = [
+          "<strong>Solo falta Certamen 3.</strong>",
+          "Ce3 minimo para poder rendir global: <strong>" + describeRequired((50 - base) / (alpha * 0.25)) + "</strong>.",
+          "Ce3 minimo para aprobar directo: <strong>" + describeRequired((55 - base) / (alpha * 0.25)) + "</strong>."
+        ].join("<br>");
+      }
+    }
+
+    function matFinalWithGlobal(c1, c2, c3, pq, cg) {
+      const certs = [
+        { name: "C1", value: c1 },
+        { name: "C2", value: c2 },
+        { name: "C3", value: c3 }
+      ];
+      const lowest = certs.reduce((best, item) => item.value < best.value ? item : best, certs[0]);
+      const sum = c1 + c2 + c3 - lowest.value + cg + pq;
+      return { nf: 0.25 * sum, replaced: lowest.name };
+    }
+
+    function calculateMat() {
+      const c1 = value("mat-c1");
+      const c2 = value("mat-c2");
+      const c3 = value("mat-c3");
+      const cg = value("mat-cg");
+      const pq = bestAverage(["mat-q1", "mat-q2", "mat-q3", "mat-q4", "mat-q5", "mat-q6", "mat-q7", "mat-q8"].map(value), 6);
+      const ready = [c1, c2, c3, pq].every((n) => n != null);
+      const baseReady = [c1, c2, pq].every((n) => n != null);
+      const base = baseReady ? 0.25 * (c1 + c2 + pq) : null;
+      const ps = ready ? 0.25 * (c1 + c2 + c3 + pq) : null;
+      const globalResult = ready && cg != null ? matFinalWithGlobal(c1, c2, c3, pq, cg) : null;
+      const nf = globalResult ? globalResult.nf : ps;
+
+      $("#mat-ps").textContent = fmt(ps);
+      $("#mat-nf").textContent = fmt(nf);
+      $("#mat-pq-out").textContent = fmt(pq);
+      $("#mat-base-out").textContent = fmt(base);
+      $("#mat-replace-out").textContent = globalResult ? globalResult.replaced : "--";
+
+      if (ready) {
+        const lowest = Math.min(c1, c2, c3);
+        $("#mat-cg-needed").textContent = describeRequired(220 - (c1 + c2 + c3 + pq - lowest));
+      } else {
+        $("#mat-cg-needed").textContent = "--";
+      }
+
+      if (nf == null) {
+        setStatus("mat-status", "neutral", "Faltan datos para calcular la presentacion semestral.");
+      } else if (nf >= 55) {
+        setStatus("mat-status", "ok", "<strong>Apruebas.</strong><br>La nota final queda en " + fmt(nf) + ".");
+      } else {
+        setStatus("mat-status", "bad", "<strong>No alcanza para aprobar.</strong><br>Necesitas nota final mayor o igual que 55.");
+      }
+
+      const onlyC3Missing = baseReady && c3 == null;
+      $("#mat-missing-c3").classList.toggle("hidden", !onlyC3Missing);
+      if (onlyC3Missing) {
+        const neededC3 = 220 - (c1 + c2 + pq);
+        $("#mat-missing-c3").innerHTML = [
+          "<strong>Solo falta Certamen 3.</strong>",
+          "C3 minimo para aprobar sin global: <strong>" + describeRequired(neededC3) + "</strong>.",
+          "Si luego rindes global, este reemplaza el certamen mas bajo entre C1, C2 y C3."
+        ].join("<br>");
+      }
+    }
+
+    $$(".tab").forEach((button) => {
+      button.addEventListener("click", () => {
+        $$(".tab").forEach((tab) => tab.classList.toggle("active", tab === button));
+        $$(".course").forEach((course) => course.classList.toggle("active", course.id === button.dataset.course + "-course"));
+      });
+    });
+
+    $("#fis-add-task").addEventListener("click", () => {
+      addTaskInput();
+      calculateFis();
+    });
+
+    $("#fis-remove-task").addEventListener("click", () => {
+      if ($("#fis-tasks").children.length > 1) {
+        $("#fis-tasks").lastElementChild.remove();
+        calculateFis();
+      }
+    });
+
+    ["fis-ce1", "fis-ce2", "fis-ce3", "fis-co1", "fis-co2", "fis-co3", "fis-co4", "fis-co5", "fis-pcl", "fis-alpha", "fis-ceg", "fis-drop-two"].forEach((id) => {
+      $("#" + id).addEventListener("input", calculateFis);
+      $("#" + id).addEventListener("change", calculateFis);
+    });
+
+    ["mat-c1", "mat-c2", "mat-c3", "mat-cg", "mat-q1", "mat-q2", "mat-q3", "mat-q4", "mat-q5", "mat-q6", "mat-q7", "mat-q8"].forEach((id) => {
+      $("#" + id).addEventListener("input", calculateMat);
+      $("#" + id).addEventListener("change", calculateMat);
+    });
+
+    for (let i = 0; i < 6; i += 1) addTaskInput();
+    calculateFis();
+    calculateMat();
+  </script>
+</body>
+</html>
